@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ステレオGIF生成ツール</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root {
+      --gap: 1rem;
+      --left-width: 60%;
+      --right-width: 40%;
+      --bg: #ffffff;
+      --muted: #666;
+      --accent: #2f8bfd;
+      --warn: #b45f00;
+      --danger: #c00;
+      --hint-bg: #f7f7ff;
+      --note-bg: #fff8e6;
+      --card-pad: 0.9rem;
+      --max-width: 1100px;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "メイリオ", sans-serif;
+      background: var(--bg);
+      background-color: #f0f6ff;
+      color: #222;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+      box-sizing: border-box;
+      max-width: var(--max-width);
+    }
+
+    header {
+      margin-bottom: 0.6rem;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin: 0 0 0.25rem 0;
+    }
+
+    main.grid {
+      display: flex;
+      gap: var(--gap);
+      align-items: flex-start;
+    }
+
+    /* 左カラム（生成ツール・使い方） */
+    .col-left {
+      width: var(--left-width);
+      min-width: 320px;
+    }
+
+    /* 右カラム（ヒント・注意） */
+    .col-right {
+      width: var(--right-width);
+      min-width: 240px;
+    }
+
+    .card {
+      padding: var(--card-pad);
+      border: 1px solid #eee;
+      border-radius: 8px;
+      background: #ffffff54;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+    }
+
+    .control-group {
+      margin-bottom: 0.9rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin-bottom: 0.25rem;
+    }
+
+    .small {
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    #generateBtn {
+      display: inline-block;
+      margin-top: 0.25rem;
+      padding: 0.5rem 0.8rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    #generateBtn:active { transform: translateY(1px); }
+
+    #canvas { display: none; }
+
+    #warningArea { color: var(--warn); font-weight: 700; margin-top: 0.6rem; }
+    #errorArea { color: var(--danger); font-weight: 700; margin-top: 0.6rem; }
+
+    #result img { max-width: 100%; display: block; margin-top: 0.6rem; border-radius: 4px; }
+    #result a { display: inline-block; margin-top: 0.5rem; color: var(--accent); text-decoration: none; }
+
+    .hint {
+      background: var(--hint-bg);
+      border-left: 4px solid #6a6cff;
+      padding: 0.6rem;
+      margin-top: 0.6rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      color: #222;
+    }
+
+    .note {
+      background: var(--note-bg);
+      border-left: 4px solid #f1c40f;
+      padding: 0.6rem;
+      margin-top: 0.6rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      color: #222;
+    }
+
+    ul { margin: 0.2rem 0 0.6rem 1.1rem; }
+
+    footer {
+      margin-top: 1.1rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+      border-top: 1px solid #eee;
+      padding-top: 0.6rem;
+    }
+
+    /* レスポンシブ: 狭い画面では縦並び */
+    @media (max-width: 880px) {
+      main.grid { flex-direction: column; }
+      .col-left, .col-right { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ステレオGIF生成ツール</h1>
+    <div class="small">Nintendo 3DS 用の MPO を想定したステレオGIF 作成ツールです</div>
+  </header>
+
+  <main class="grid" role="main">
+    <!-- 左 60%: 生成ツール + 使い方 -->
+    <section class="col-left">
+      <div class="card" aria-label="生成ツール">
+        <div class="control-group">
+          <label for="mpoInput">MPOファイルを選択</label>
+          <input type="file" id="mpoInput" accept=".mpo" />
+        </div>
+
+        <div class="control-group">
+          <label for="speedRange">切り替え速度（秒） — デフォルト 0.2秒</label>
+          <input type="range" id="speedRange" min="100" max="1000" step="10" value="200" />
+          <div class="small"><span id="speedValue">0.2秒</span></div>
+        </div>
+
+        <!-- 切り抜きUIは表示しない（コード内で備忘録） -->
+        <!--
+        <div class="control-group">
+          <label for="cropRange">左右切り抜き量（px）</label>
+          <input type="range" id="cropRange" min="-64" max="64" step="1" value="0" />
+          <div class="small"><span id="cropValue">0px</span></div>
+        </div>
+        -->
+
+        <div class="control-group">
+          <label for="opacityRange">重ね不透明度（%）</label>
+          <input type="range" id="opacityRange" min="0" max="100" step="1" value="50" />
+          <div class="small"><span id="opacityValue">50%</span></div>
+        </div>
+
+        <button id="generateBtn">GIFを生成</button>
+
+        <canvas id="canvas" width="640" height="480"></canvas>
+
+        <div id="warningArea" aria-live="polite"></div>
+        <div id="errorArea" aria-live="assertive"></div>
+
+        <div id="result" class="small" aria-live="polite"></div>
+      </div>
+
+      <div class="card" style="margin-top: var(--gap);" aria-label="使い方">
+        <h2 style="font-size:1rem; margin:0 0 0.4rem 0;">使い方</h2>
+        <ul>
+          <li>MPOファイルを選択すると、左右画像を抽出してステレオGIFを生成します。</li>
+          <li>切り替え速度はスライダーで調整できます（単位はミリ秒、デフォルトは0.2秒=200ms）。</li>
+          <li>重ね不透明度で左右の重なり見え方を調整できます。</li>
+          <li>切り抜き機能は現在ブラウザUIに表示していません（将来の拡張用にコード内で備忘録を保持）。</li>
+          <li>生成後はページ内でプレビューでき、ダウンロードリンクから保存できます。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 右 40%: ヒント・注意 -->
+    <aside class="col-right">
+      <div class="card" aria-label="ヒント">
+        <h2 style="font-size:1rem; margin:0 0 0.4rem 0;">ヒント</h2>
+        <div class="hint">
+          <strong>立体感が出やすいMPOを作るコツ</strong>
+          <ul>
+            <li>被写体をできるだけ画面中央に配置する</li>
+            <li>建物や明瞭な輪郭のあるオブジェクトなど、奥行きが分かりやすい被写体を選ぶ</li>
+            <li>左右で同一カットの連写や被写体が遠すぎる場合は視差が小さくなり、立体感が出にくい</li>
+            <li>左右が逆順に格納されたMPOや連写目的のMPOは正確に立体化できない場合がある</li>
+          </ul>
+          <div style="text-align: center;">
+            <img src="sample.gif" width="300" height="225">
+        </div>
+          </div>
+        <div class="note" style="margin-top:0.6rem;">
+          <strong>注意</strong><br />
+          本ツールは主に <strong>Nintendo 3DS</strong> のMPOを想定して設計されています。  
+          他のカメラが生成したMPO（解像度やMPF構造が異なるもの）には対応していないため、期待どおりに立体化しない可能性があります。  
+          その場合はMPOの生成元や解像度を確認してください。
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <div>ステレオGIFツール</div>
+    <div style="margin-top:0.35rem; color:var(--muted); font-size:0.9rem;">
+  使用ライブラリと著作権:
+  <ul style="margin:0.3rem 0 0 1.1rem;">
+    <li>gif.js / gif.worker.js — gif.js プロジェクト（ライセンス: MIT または配布元の指定に従う）</li>
+    <li>mpo.js — MPO抽出ロジック（出典とライセンスを README で明記）</li>
+  </ul>
+  本プロジェクトのコードは MIT License（LICENSE ファイル参照）で配布しています。© 2025 baku
+</div>
+  </footer>
+
+  <!-- スクリプト（同一フォルダ配置を想定） -->
+  <script src="./gif.js"></script>
+  <script src="./gif.worker.js"></script>
+  <script src="./mpo.js"></script>
+  <script src="./script.js"></script>
+</body>
+</html>
