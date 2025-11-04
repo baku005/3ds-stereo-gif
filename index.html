@@ -12,17 +12,51 @@
       --hint-bg:#f7f7ff; --note-bg:#fff8e6; --card-pad:0.9rem; --max-width:1100px;
     }
     html,body{height:100%}
-    body{
+    body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "メイリオ", sans-serif;
-      background:var(--bg); color:#222; margin:1.5rem auto; padding:0 1rem; box-sizing:border-box; max-width:var(--max-width);
+      background: var(--bg);
+      background-color: #f0f6ff;
+      color: #222;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+      box-sizing: border-box;
+      max-width: var(--max-width);
     }
-    header{margin-bottom:0.6rem}
-    h1{font-size:1.4rem;margin:0 0 0.25rem 0}
-    .small{font-size:0.92rem;color:var(--muted)}
-    main.grid{display:flex;gap:var(--gap);align-items:flex-start}
-    .col-left{width:var(--left-width);min-width:320px}
-    .col-right{width:var(--right-width);min-width:240px}
-    .card{padding:var(--card-pad);border:1px solid #eee;border-radius:8px;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,0.02)}
+
+    header {
+      margin-bottom: 0.6rem;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin: 0 0 0.25rem 0;
+    }
+
+    main.grid {
+      display: flex;
+      gap: var(--gap);
+      align-items: flex-start;
+    }
+
+    /* 左カラム（生成ツール・使い方） */
+    .col-left {
+      width: var(--left-width);
+      min-width: 320px;
+    }
+
+    /* 右カラム（ヒント・注意） */
+    .col-right {
+      width: var(--right-width);
+      min-width: 240px;
+    }
+
+    .card {
+      padding: var(--card-pad);
+      border: 1px solid #eee;
+      border-radius: 8px;
+      background: #ffffff54;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+    }
     .control-group{margin-bottom:0.9rem}
     label{display:block;margin-bottom:0.3rem;font-weight:600;font-size:0.95rem}
     input[type="range"]{width:100%;margin-bottom:0.25rem}
@@ -141,3 +175,4 @@
   <script src="./script.js"></script>
 </body>
 </html>
+
